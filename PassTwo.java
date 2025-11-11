@@ -147,6 +147,6 @@ public class PassTwo {
 
         ic.close();
         mc.close();
-        System.out.println("✅ PASS 2 Completed — machinecode.txt generated successfully!");
+        System.out.println(" PASS 2 Completed - machinecode.txt generated successfully!");
     }
 }

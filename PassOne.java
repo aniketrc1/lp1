@@ -55,48 +55,39 @@ public class PassOne {
             if (line.isEmpty()) continue;
             String[] words = line.split("[ ,]+");
 
-            // --- START ---
             if (words[0].equalsIgnoreCase("START")) {
                 LC = Integer.parseInt(words[1]);
                 ic.write("(AD,01)\t(C," + LC + ")\n");
                 continue;
             }
 
-            // --- END ---
             if (words[0].equalsIgnoreCase("END")) {
-                // Assign addresses to remaining literals
-                for (Literal lit : LITTAB) {
-                    if (lit.address == -1) {
+                for (Literal lit : LITTAB)
+                    if (lit.address == -1)
                         lit.address = LC++;
-                    }
-                }
                 ic.write("(AD,02)\n");
                 break;
             }
 
-            // --- LTORG ---
             if (words[0].equalsIgnoreCase("LTORG")) {
                 ic.write("(AD,05)\n");
-                for (Literal lit : LITTAB) {
-                    if (lit.address == -1) {
+                for (Literal lit : LITTAB)
+                    if (lit.address == -1)
                         lit.address = LC++;
-                    }
-                }
                 continue;
             }
 
-            // --- Label + Instruction ---
             int startIndex = 0;
             String label = "";
+
             if (!OPTAB.containsKey(words[0]) && !words[0].equalsIgnoreCase("LTORG")) {
                 label = words[0];
                 startIndex = 1;
 
-                // Add symbol only once
                 boolean exists = false;
                 for (Symbol s : SYMTAB) {
                     if (s.name.equals(label)) {
-                        s.address = LC; // update address if found again
+                        s.address = LC;
                         exists = true;
                         break;
                     }
@@ -113,10 +104,11 @@ public class PassOne {
 
             if (cls.equals("IS")) {
                 ic.write("(" + cls + "," + code + ")\t");
-                // Operand processing
+
                 if (words.length > startIndex + 1 && REGTAB.containsKey(words[startIndex + 1])) {
                     ic.write("(" + REGTAB.get(words[startIndex + 1]) + ")");
                 }
+
                 if (words.length > startIndex + 2) {
                     String operand = words[startIndex + 2];
                     if (operand.startsWith("='")) {
@@ -133,17 +125,28 @@ public class PassOne {
                         ic.write("(S," + SYMTAB.size() + ")");
                     }
                 }
+
                 ic.newLine();
                 LC++;
             }
 
             else if (cls.equals("DL")) {
-                if (mnemonic.equalsIgnoreCase("DC")) {
+
+                boolean exists = false;
+                for (Symbol s : SYMTAB) {
+                    if (s.name.equals(label)) {
+                        s.address = LC;
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists && !label.equals(""))
                     SYMTAB.add(new Symbol(label, LC));
+
+                if (mnemonic.equalsIgnoreCase("DC")) {
                     ic.write("(DL,01)\t(C," + words[startIndex + 1] + ")\n");
                     LC++;
                 } else if (mnemonic.equalsIgnoreCase("DS")) {
-                    SYMTAB.add(new Symbol(label, LC));
                     ic.write("(DL,02)\t(C," + words[startIndex + 1] + ")\n");
                     LC += Integer.parseInt(words[startIndex + 1]);
                 }
@@ -153,7 +156,6 @@ public class PassOne {
         br.close();
         ic.close();
 
-        // --- Write SYMTAB & LITTAB files ---
         BufferedWriter sOut = new BufferedWriter(new FileWriter("SYMTAB.txt"));
         for (Symbol s : SYMTAB)
             sOut.write(s.name + " " + s.address + "\n");
@@ -164,13 +166,13 @@ public class PassOne {
             lOut.write(l.literal + " " + l.address + "\n");
         lOut.close();
 
-        System.out.println("PASS 1 Completed ✅");
-        System.out.println("\nSYMBOL TABLE:");
-        for (int i = 0; i < SYMTAB.size(); i++)
-            System.out.println((i + 1) + "\t" + SYMTAB.get(i).name + "\t" + SYMTAB.get(i).address);
+        System.out.println("PASS 1 Completed");
+        //System.out.println("\nSYMBOL TABLE:");
+        //for (int i = 0; i < SYMTAB.size(); i++)
+            //System.out.println((i + 1) + "\t" + SYMTAB.get(i).name + "\t" + SYMTAB.get(i).address);
 
-        System.out.println("\nLITERAL TABLE:");
-        for (int i = 0; i < LITTAB.size(); i++)
-            System.out.println((i + 1) + "\t" + LITTAB.get(i).literal + "\t" + LITTAB.get(i).address);
+        //System.out.println("\nLITERAL TABLE:");
+        //for (int i = 0; i < LITTAB.size(); i++)
+            //System.out.println((i + 1) + "\t" + LITTAB.get(i).literal + "\t" + LITTAB.get(i).address);
     }
 }
